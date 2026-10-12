@@ -1,5 +1,7 @@
 # Lock Screen PIN Pad for Omarchy
 
+Listed on the [Omarchy plugin marketplace](https://plugins.omarchy.org/plugin.html?id=io.github.yeutterg.lock-pin).
+
 Omarchy's lock screen plus an on-screen number pad and an optional 4–6 digit
 PIN. Made for tablets and detachables: with the keyboard off there's no way to
 type a password, and the on-screen keyboard can't draw over a session lock.

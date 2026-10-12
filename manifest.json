@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.yeutterg.lock-pin",
+  "name": "Lock Screen PIN Pad",
+  "version": "0.1.0",
+  "author": "yeutterg",
+  "license": "MIT",
+  "description": "Omarchy's lock screen plus an on-screen number pad and an optional 4-6 digit PIN, for tablets and detachables where there's no keyboard to type a password.",
+  "omarchy": {
+    "capabilities": [
+      "authentication"
+    ],
+    "clonedFrom": "omarchy.lock"
+  },
+  "kinds": [
+    "service"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "service": "Service.qml"
+  }
+}

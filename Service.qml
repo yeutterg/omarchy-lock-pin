@@ -505,8 +505,11 @@ Item {
   // ---- tablet-mode switch ----------------------------------------------
   // Any input device whose switch bitmap has SW_TABLET_MODE (bit 1). Binds are
   // added at runtime with hyprctl eval (nothing in the Hyprland config is
-  // edited) and again whenever Hyprland reloads its config.
+  // edited) and again whenever Hyprland reloads its config. Some drivers
+  // (intel-hid) only create the switch device on its first change, so the list
+  // is rescanned and a switch that turns up later counts as a detach.
   property var tabletSwitches: []
+  property bool scannedOnce: false
 
   Process {
     id: findSwitches
@@ -525,8 +528,13 @@ Item {
             if (Math.floor(parseInt(words[words.length - 1], 16) / 2) % 2 === 1) names.push(name)
           }
         }
-        root.tabletSwitches = names
-        root.registerBinds()
+        if (names.join("\n") !== root.tabletSwitches.join("\n")) {
+          var appeared = root.scannedOnce && names.length > root.tabletSwitches.length
+          root.tabletSwitches = names
+          root.registerBinds()
+          if (appeared) root.tabletMode = true
+        }
+        root.scannedOnce = true
       }
     }
   }
@@ -543,6 +551,13 @@ Item {
     }
     bindProc.command = ["hyprctl", "eval", lua]
     bindProc.running = true
+  }
+
+  Timer {
+    interval: 3000
+    repeat: true
+    running: true
+    onTriggered: if (!findSwitches.running) findSwitches.running = true
   }
 
   Process { id: bindProc }

@@ -143,8 +143,16 @@ Item {
     MouseArea {
       anchors.fill: parent
       hoverEnabled: true
+      // The pointer entering the lock screen as it appears is not movement;
+      // waking on it would light a display just blanked (power button).
+      property point enteredAt: Qt.point(-1, -1)
+      onEntered: enteredAt = Qt.point(mouseX, mouseY)
       onClicked: { root.wakeRequested(); root.forcePasswordFocus() }
-      onPositionChanged: root.wakeRequested()
+      onPositionChanged: function(m) {
+        if (m.x === enteredAt.x && m.y === enteredAt.y) return
+        enteredAt = Qt.point(-1, -1)
+        root.wakeRequested()
+      }
     }
 
     BorderSurface {

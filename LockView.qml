@@ -143,16 +143,21 @@ Item {
     MouseArea {
       anchors.fill: parent
       hoverEnabled: true
+      acceptedButtons: Qt.NoButton
       // The pointer entering the lock screen as it appears is not movement;
       // waking on it would light a display just blanked (power button).
       property point enteredAt: Qt.point(-1, -1)
       onEntered: enteredAt = Qt.point(mouseX, mouseY)
-      onClicked: { root.wakeRequested(); root.forcePasswordFocus() }
       onPositionChanged: function(m) {
         if (m.x === enteredAt.x && m.y === enteredAt.y) return
         enteredAt = Qt.point(-1, -1)
         root.wakeRequested()
       }
+    }
+
+    // Handle touch directly rather than depending on synthetic mouse clicks.
+    TapHandler {
+      onTapped: { root.wakeRequested(); root.forcePasswordFocus() }
     }
 
     BorderSurface {
@@ -181,7 +186,9 @@ Item {
         activeFocusOnPress: true
         clip: true
         enabled: root.inputEnabled && !root.authenticatingPassword
-        readOnly: root.authenticatingPassword
+        // Read-only when input is off too (the hidden preview): Qt reads the
+        // clipboard on every change for any writable TextInput, visible or not.
+        readOnly: !root.inputEnabled || root.authenticatingPassword
         echoMode: TextInput.Password
         passwordCharacter: "\u25CF"
         passwordMaskDelay: 0
@@ -289,7 +296,7 @@ Item {
           width: root.keySize
           height: root.keySize
           radius: width / 2
-          color: keyArea.pressed ? Color.lock.selection : Color.lock.background
+          color: keyTap.pressed ? Color.lock.selection : Color.lock.background
           border.width: 2
           border.color: Color.lock.placeholder
           // The blank keeps its grid cell (an invisible item would collapse it).
@@ -303,11 +310,11 @@ Item {
             font.pixelSize: Math.round(root.keySize * 0.38)
           }
 
-          MouseArea {
-            id: keyArea
-            anchors.fill: parent
-            enabled: parent.modelData !== ""
-            onClicked: root.pressKey(parent.modelData)
+          TapHandler {
+            id: keyTap
+            enabled: parent.modelData !== "" && root.inputEnabled && !root.authenticatingPassword
+            gesturePolicy: TapHandler.ReleaseWithinBounds
+            onTapped: root.pressKey(parent.modelData)
           }
         }
       }

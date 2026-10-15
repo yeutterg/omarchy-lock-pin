@@ -186,9 +186,11 @@ Item {
         activeFocusOnPress: true
         clip: true
         enabled: root.inputEnabled && !root.authenticatingPassword
-        // Read-only when input is off too (the hidden preview): Qt reads the
-        // clipboard on every change for any writable TextInput, visible or not.
-        readOnly: !root.inputEnabled || root.authenticatingPassword
+        // Always read-only: Qt reads the whole clipboard on every clipboard
+        // change for any writable TextInput, visible or not, so a misbehaving
+        // clipboard owner could stall the shell. Keys.onPressed below does the
+        // typing instead (no paste or input-method text on the lock screen).
+        readOnly: true
         echoMode: TextInput.Password
         passwordCharacter: "\u25CF"
         passwordMaskDelay: 0
@@ -215,17 +217,24 @@ Item {
           if (text.length > 0 && root.failureMessage.length > 0) root.clearFailureRequested()
         }
 
-        onAccepted: {
-          var submitted = root.passwordText
-          root.passwordTextEdited("")
-          if (submitted.length > 0) root.submitPassword(submitted)
-        }
-
         Keys.onPressed: function(event) {
           root.wakeRequested()
-          if (event.key === Qt.Key_Escape || (event.modifiers & Qt.ControlModifier && event.key === Qt.Key_U)) {
+          event.accepted = true
+          if (!root.inputEnabled || root.authenticatingPassword) return
+          var ctrl = (event.modifiers & Qt.ControlModifier) !== 0
+          if (event.key === Qt.Key_Escape || (ctrl && (event.key === Qt.Key_U || event.key === Qt.Key_Backspace))) {
             root.passwordTextEdited("")
-            event.accepted = true
+          } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+            var submitted = root.passwordText
+            root.passwordTextEdited("")
+            if (submitted.length > 0) root.submitPassword(submitted)
+          } else if (event.key === Qt.Key_Backspace) {
+            root.passwordTextEdited(root.passwordText.slice(0, -1))
+          } else if (!ctrl && !(event.modifiers & Qt.AltModifier) && event.text.length > 0
+                     && event.text.charCodeAt(0) >= 32 && event.text.charCodeAt(0) !== 127) {
+            root.passwordTextEdited(root.passwordText + event.text)
+          } else {
+            event.accepted = false
           }
         }
       }

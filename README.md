@@ -15,10 +15,12 @@ type a password, and the on-screen keyboard can't draw over a session lock.
   detached (`lock-pin keypad detached`).
 - Everything else is Omarchy's stock lock screen: password through PAM,
   fingerprint, blurred wallpaper. It replaces the built-in `omarchy.lock`
-  while enabled. Two small fixes over stock: the password field is read-only
-  while input is off (stock leaves the hidden preview's field writable, so Qt
-  reads every clipboard change into the shell), and the pointer merely
-  entering the lock screen doesn't wake a blanked display.
+  while enabled. Two small fixes over stock: the password field never reads the
+  clipboard (it's read-only and typing is handled key by key, because Qt reads
+  every clipboard change into any writable field, which a misbehaving app
+  could use to stall the shell; pasting into the lock screen isn't possible),
+  and the pointer merely entering the lock screen doesn't wake a blanked
+  display.
 
 ## Install
 
